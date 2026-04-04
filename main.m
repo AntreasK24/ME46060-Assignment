@@ -22,7 +22,22 @@ alpha = 0.3;      % cooling rate
 maxIter = 1000;
 epsilon = 1;
 
-[x_best,cost_best,T] = simulated_annealing(f, x0, T0, Tmin, alpha, maxIter, epsilon);
+
+
+% Inequality constraints g(x) <= 0
+g = {
+    @(x) x(1) + x(2) - 1;        % x1 + x2 <= 3
+    @(x) x(1) + x(2) + 1;
+
+};
+
+% Equality constraints h(x) = 0 
+h = {
+    % @(x) x(1)^2 + x(2)^2 - 5;
+};
+
+
+[x_best,cost_best,T] = simulated_annealing(f, x0, T0, Tmin, alpha, maxIter, epsilon, g, h);
 
 disp(x_best)
 
@@ -57,9 +72,34 @@ hold off
 figure;
 contour(X, Y, Z, 50);
 hold on
+
+figure;
+contour(X, Y, Z, 50);
+hold on
+
+
 plot(x_best(1), x_best(2), 'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
+
+
+G_total_violation = zeros(size(X)); 
+
+for i = 1:length(g)
+
+    Gi = arrayfun(@(x,y) g{i}([x; y]), X, Y);
+
+
+    contour(X, Y, Gi, [0 0], 'LineWidth', 2);
+
+
+    G_total_violation = G_total_violation + (Gi > 0);
+end
+
+
+contourf(X, Y, G_total_violation > 0, 1, ...
+    'FaceAlpha', 0.2, 'LineColor', 'none');
+
 xlabel('x');
 ylabel('y');
-title('Himmelblau''s Function – Contours');
+title('Himmelblau''s Function with Constraints');
 colorbar
 hold off
