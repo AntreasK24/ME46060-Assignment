@@ -22,7 +22,7 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon)
 
 
 
-    max_iter = 1000;
+    max_iter = 100;
     tol = 1e-6;
 
 
@@ -49,19 +49,47 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon)
 
         % 2. Build QP
         H = B;
-        A = Jineq;
-        b = -cineq;
-        Aeq = Jeq;
-        beq = -ceq;
+        % Build QP constraints safely
+
+        if isempty(cineq)
+            A = [];
+            b = [];
+        else
+            A = Jineq;
+            b = -cineq + 1e-6; % small relaxation
+        end
+
+        if isempty(ceq)
+            Aeq = [];
+            beq = [];
+        else
+            Aeq = Jeq;
+            beq = -ceq;
+        end
 
         % 3. Solve QP
         [d,fval,exitflag,output,lambda_QP] = quadprog(H, g, A, b, Aeq, beq, [], [], [], options_qp);
+        fprintf('QP exitflag: %d\n', exitflag);
 
 
+        % --- Multiplier handling (ROBUST FIX) ---
+        if exitflag ~= 1 || isempty(lambda_QP)
+            % QP failed → fallback
+            warning('QP failed → using zero multipliers');
 
-        %Langrange Multipliers
-        mu_new = lambda_QP.ineqlin;
-        lambda_new = lambda_QP.eqlin;
+            mu_new = zeros(size(cineq));
+            lambda_new = zeros(size(ceq));
+
+        else
+            if isstruct(lambda_QP)
+                mu_new = lambda_QP.ineqlin;
+                lambda_new = lambda_QP.eqlin;
+            else
+                % fallback for old MATLAB (rare case)
+                mu_new = zeros(size(cineq));
+                lambda_new = zeros(size(ceq));
+            end
+        end
 
 
 
@@ -155,17 +183,18 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon)
     x_best = x;
     cost_best = cost;
 
-
     function gL = gradL(x, lambda, mu)
         gL = gradf(x);
 
         [Jineq, Jeq] = jaccon(x);
 
-        if ~isempty(Jeq)
+        % Add equality part ONLY if it exists
+        if ~isempty(Jeq) && ~isempty(lambda)
             gL = gL + Jeq' * lambda;
         end
 
-        if ~isempty(Jineq)
+        % Add inequality part ONLY if it exists
+        if ~isempty(Jineq) && ~isempty(mu)
             gL = gL + Jineq' * mu;
         end
     end
