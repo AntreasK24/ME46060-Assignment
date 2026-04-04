@@ -26,14 +26,15 @@ epsilon = 1;
 
 % Inequality constraints g(x) <= 0
 g = {
-    @(x) x(1) + x(2) - 1;        % x1 + x2 <= 3
-    @(x) x(1) + x(2) + 1;
-
+    @(x) x(1) + x(2) - 1;     
+    @(x) x(1) - 0.2;
+    @(x) x(2) + 5;
+    
 };
 
 % Equality constraints h(x) = 0 
 h = {
-    % @(x) x(1)^2 + x(2)^2 - 5;
+    @(x) x(1) - 3;
 };
 
 
