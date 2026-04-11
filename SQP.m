@@ -1,13 +1,11 @@
-function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug)
+function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug,rho)
     
     %Initialize
     x = x0;
     n = length(x);
     B = eye(n);
 
-    rho = 1000;
-
-    tol_kkt = 1e-6;
+    
 
     options_qp = optimoptions('quadprog','Display','off');
 
@@ -56,7 +54,7 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug)
             b = [];
         else
             A = Jineq;
-            b = -cineq + 1e-6; % small relaxation
+            b = -cineq;
         end
 
         if isempty(ceq)
@@ -73,9 +71,8 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug)
             fprintf('QP exitflag: %d\n', exitflag);
         end
 
-        % --- Multiplier handling (ROBUST FIX) ---
+        % Multiplier handling
         if exitflag ~= 1 || isempty(lambda_QP)
-            % QP failed → fallback
             warning('QP failed → using zero multipliers');
 
             mu_new = zeros(size(cineq));
@@ -86,7 +83,6 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug)
                 mu_new = lambda_QP.ineqlin;
                 lambda_new = lambda_QP.eqlin;
             else
-                % fallback for old MATLAB (rare case)
                 mu_new = zeros(size(cineq));
                 lambda_new = zeros(size(ceq));
             end
@@ -103,15 +99,16 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug)
         alpha = 1;
         phi_current = phi(x);
 
+        viol = @(x) norm(max(0, get_cineq(x)),1);
+
         while true
             x_trial = x + alpha*d;
 
-            if phi(x_trial) < phi_current
+            if phi(x_trial) < phi_current && viol(x_trial) <= viol(x)
                 break;
             end
 
             alpha = alpha/2;
-
             if alpha < 1e-6
                 break;
             end
@@ -145,9 +142,7 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug)
 
         iter = iter + 1;
 
-        %KKT Criteria
-        gL = gradL(x,lambda,mu);
-        r_stationarity = norm(gL);
+
 
 
         if norm(d) < 1e-8 && r_stationarity > 1e-3
@@ -158,26 +153,6 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug)
         end
 
         [cineq, ceq] = confun(x);
-
-        r_eq = norm(ceq);
-        r_ineq = norm(max(0, cineq));
-
-        r_comp = norm(mu .* cineq);
-
-        r_dual = norm(min(0, mu));
-
-        fprintf('Iter %d: stat=%.2e, eq=%.2e, ineq=%.2e, comp=%.2e\n', ...
-        iter, r_stationarity, r_eq, r_ineq, r_comp);
-
-        %Stop if criteria is satisfied
-        if r_stationarity < tol_kkt && ...
-            r_eq < tol_kkt && ...
-            r_ineq < tol_kkt && ...
-            r_comp < tol_kkt && ...
-            r_dual < tol_kkt
-            break;
-        end
-
 
 
     end

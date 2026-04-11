@@ -90,7 +90,7 @@ jaccon = @(x) deal( ...
 x0 = [0.1; 20; 0.8; 0.05; 0.5];
 
 [x_sa, cost_sa, ~] = simulated_annealing( ...
-    f, x0, 100, 1e-3, 0.9, 3000, 0.05, g, h);
+    f, x0, 100, 1e-3, 0.9, 3000, 0.05, g, h,1e12,true);
 
 [Jineq, ~] = jaccon(x_sa);
 [cineq, ~] = confun(x_sa);
@@ -101,8 +101,32 @@ disp('Size cineq:'), disp(size(cineq))
 disp('--- SA Result ---')
 disp(x_sa)
 
-[x_sqp, cost_sqp] = SQP(f, gradf, x_sa, confun, jaccon,false);
+[x_sqp, cost_sqp] = SQP(f, gradf, x_sa, confun, jaccon,false,1e8);
 
 disp('--- SQP Result ---')
 disp(x_sqp)
 disp(cost_sqp)
+
+
+%Check if KKT conditions are satisified
+g = gradf(x_sqp);
+
+mu = zeros(10,1);
+mu(1) = -g(1);   % t upper
+mu(3) = -g(2);   % Aw upper
+mu(5) = -g(3);   % R upper
+mu(8) =  g(4);   % k lower
+mu(9) = -g(5);   % g upper
+
+[cineq, ceq] = confun(x_sqp);
+[Jineq, Jeq] = jaccon(x_sqp);
+
+
+stationarity = g + Jineq' * mu;
+dual_feas    = min(mu);
+comp         = mu .* cineq;
+
+disp('stationarity ='), disp(stationarity)
+disp('max(cineq,0) ='), disp(max(cineq,0))
+disp('dual min     ='), disp(dual_feas)
+disp('comp         ='), disp(comp)
