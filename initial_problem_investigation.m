@@ -22,7 +22,7 @@ C = ce*H*Qnet + ct*t*(Atotal - Aw) + cw*Aw;
 
 %% Convexity Analysis
 
-% Hessian of cost function only
+% Hessian of cost function
 H_C = simplify(hessian(C, x));
 Hfun_C = matlabFunction(H_C, 'Vars', {t, Aw, Rbase, k, g});
 
@@ -72,8 +72,8 @@ end
 % Track min/max derivative values for each variable
 minGrad = inf(1,5);
 maxGrad = -inf(1,5);
-minPoint = nan(5,5);   % each row stores point where min occurs
-maxPoint = nan(5,5);   % each row stores point where max occurs
+minPoint = nan(5,5);   
+maxPoint = nan(5,5);   
 
 gradC = simplify(gradient(C, x));
 gradFun = matlabFunction(gradC, 'Vars', {t, Aw, Rbase, k, g});

@@ -40,12 +40,12 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug,rho)
     while iter < max_iter
         alpha = 1;
 
-        % 1. Evaluate at current x
+        % Evaluate at current x
         g = gradL(x, lambda, mu);
         [cineq, ceq] = confun(x);
         [Jineq, Jeq] = jaccon(x);
 
-        % 2. Build QP
+        % Build QP
         H = B;
         % Build QP constraints safely
 
@@ -65,7 +65,7 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug,rho)
             beq = -ceq;
         end
 
-        % 3. Solve QP
+        % Solve QP
         [d,fval,exitflag,output,lambda_QP] = quadprog(H, g, A, b, Aeq, beq, [], [], [], options_qp);
         if debug
             fprintf('QP exitflag: %d\n', exitflag);
