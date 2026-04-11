@@ -1,9 +1,9 @@
-    Rbase = 0.4;
-    k = 0.035;
+    % Rbase = 0.4;
+    % k = 0.035;
     Atotal = 200;
     Amax = 40;
     dT = 18;
-    g = 0.6;
+    % g = 0.6;
     Isol = 300;
     Uwindow = 1.2;
     H = 2500;
@@ -13,18 +13,15 @@
     gamma = 0.3;
     betta_cool = 5;
 
-    Rwall = @(t) Rbase + 2*t/k;
+    Rwall = @(t,Rbase,k) Rbase + 2*t/k;
 
     Qwall = @(t,Aw) (Atotal - Aw)*dT./Rwall(t);
 
     Qwindow = @(Aw) Uwindow*Aw*dT;
 
-    Qsolar = @(Aw) g*Isol*Amax*(1 - exp(-Aw./Amax));
+    Qsolar = @(Aw,g) g*Isol*Amax*(1 - exp(-Aw./Amax));
 
     Qcool = @(t,Aw) betta_cool*Aw.^2 .* (1 + 5*t);
-
-    Qwinter = @(t,Aw) max(0, Qwall(t,Aw) + Qwindow(Aw) - Qsolar(Aw));
-    Qsummer = @(t,Aw) max(0, Qwall_s(t,Aw) + Qwindow_s(Aw) + Qsolar_s(Aw));
 
     Qnet = @(t,Aw) Qwall(t,Aw) + Qwindow(Aw) + Qsolar(Aw);
 

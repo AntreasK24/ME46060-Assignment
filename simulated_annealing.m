@@ -4,7 +4,7 @@ function [x_best,cost_best,T_current] = simulated_annealing(f, x0, T0, Tmin, alp
     x_current = x0;
     T_current = T0;
 
-    lambda0 = 1000;
+    lambda0 = 1e10;
 
     cost_current = f(x_current) + (lambda0/T_current)*penalty(x_current, g, h);
 
@@ -24,7 +24,8 @@ function [x_best,cost_best,T_current] = simulated_annealing(f, x0, T0, Tmin, alp
             x_new(j) = x_new(j) + delta_x;
 
             % New cost WITH penalty
-            lambda = lambda0 / T_current;
+            %lambda = lambda0 / T_current;
+            lambda = 1e10;
             cost_new = f(x_new) + lambda * penalty(x_new, g, h);
 
             delta_cost = cost_new - cost_current;

@@ -1,4 +1,4 @@
-function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon)
+function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug)
     
     %Initialize
     x = x0;
@@ -69,8 +69,9 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon)
 
         % 3. Solve QP
         [d,fval,exitflag,output,lambda_QP] = quadprog(H, g, A, b, Aeq, beq, [], [], [], options_qp);
-        fprintf('QP exitflag: %d\n', exitflag);
-
+        if debug
+            fprintf('QP exitflag: %d\n', exitflag);
+        end
 
         % --- Multiplier handling (ROBUST FIX) ---
         if exitflag ~= 1 || isempty(lambda_QP)
