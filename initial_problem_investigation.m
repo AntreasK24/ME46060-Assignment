@@ -27,11 +27,11 @@ H_C = simplify(hessian(C, x));
 Hfun_C = matlabFunction(H_C, 'Vars', {t, Aw, Rbase, k, g});
 
 % Feasible region
-t_vals     = linspace(0.02, 0.30, 6);
+t_vals     = linspace(0.02, 0.15, 6);
 Aw_vals    = linspace(5, 40, 6);
-Rbase_vals = linspace(0.2, 1.5, 5);
-k_vals     = linspace(0.02, 0.08, 5);
-g_vals     = linspace(0.2, 0.75, 5);
+Rbase_vals = linspace(0.4, 0.8, 5);
+k_vals     = linspace(0.022, 0.04, 5);
+g_vals     = linspace(0.15, 0.60, 5);
 
 minEig = inf;
 worstPoint = nan(1,5);
@@ -126,12 +126,12 @@ for i = 1:5
 end
 
 % Fix other variables 
-Rbase = 0.8;
-k     = 0.05;
-g     = 0.5;
+Rbase = 0.6;
+k     = 0.03;
+g     = 0.4;
 
 % Grid
-t_vals  = linspace(0.02, 0.30, 50);
+t_vals  = linspace(0.02, 0.15, 50);
 Aw_vals = linspace(5, 40, 50);
 
 [T, AW] = meshgrid(t_vals, Aw_vals);
@@ -159,3 +159,28 @@ xlabel('t')
 ylabel('Aw')
 title('Contour of C(t, Aw)')
 colorbar
+
+
+% Partial minimization over Aw
+t_grid = linspace(0.02, 0.15, 100);
+phi = zeros(size(t_grid));
+Aw_star = zeros(size(t_grid));
+
+for i = 1:length(t_grid)
+    t_fixed = t_grid(i);
+
+    cost_Aw = @(Aw) ce*H*(((Atotal - Aw)*dT)/(Rbase + t_fixed/k) + Uwindow*Aw*dT - g*Aw*Isol ) + ct*t_fixed*(Atotal - Aw) + cw*Aw;
+
+    Aw_candidates = linspace(5, 40, 200);
+    costs = arrayfun(cost_Aw, Aw_candidates);
+
+    [phi(i), idx] = min(costs);
+    Aw_star(i) = Aw_candidates(idx);
+end
+
+figure;
+plot(t_grid, phi, 'LineWidth', 2);
+xlabel('t');
+ylabel('\phi(t) = min_{A_w} C(t,A_w)');
+title('Partial minimization over window area');
+grid on;

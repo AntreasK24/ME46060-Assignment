@@ -42,20 +42,20 @@ gradf = @(x) [
 ];
 
 g = {
-    @(x) x(1) - 0.30;   % t <= 0.30
+    @(x) x(1) - 0.15;   % t <= 0.15
     @(x) 0.02 - x(1);   % t >= 0.02 
 
     @(x) x(2) - 40;     % Aw <= 40
     @(x) 5 - x(2);      % Aw >= 5
 
-    @(x) x(3) - 1.5;    % Rbase <= 1.5
-    @(x) 0.2 - x(3);    % Rbase >= 0.2
+    @(x) x(3) - 0.8;    % Rbase <= 0.8
+    @(x) 0.4 - x(3);    % Rbase >= 0.4
 
-    @(x) x(4) - 0.08;   % k <= 0.08
-    @(x) 0.02 - x(4);   % k >= 0.02
+    @(x) x(4) - 0.04;   % k <= 0.04
+    @(x) 0.022 - x(4);   % k >= 0.022
 
-    @(x) x(5) - 0.75;   % g <= 0.75
-    @(x) 0.2 - x(5);    % g >= 0.2
+    @(x) x(5) - 0.60;   % g <= 0.60
+    @(x) 0.15 - x(5);    % g >= 0.15
 };
 
 h = {
@@ -87,7 +87,7 @@ jaccon = @(x) deal( ...
     [] ...
 );
 
-x0 = [0.1; 20; 0.8; 0.05; 0.5];
+x0 = [0.08; 20; 0.6; 0.03; 0.4];
 
 [x_sa, cost_sa, ~] = simulated_annealing( ...
     f, x0, 100, 1e-3, 0.9, 3000, 0.05, g, h,1e12,true);
@@ -130,3 +130,60 @@ disp('stationarity ='), disp(stationarity)
 disp('max(cineq,0) ='), disp(max(cineq,0))
 disp('dual min     ='), disp(dual_feas)
 disp('comp         ='), disp(comp)
+
+% Sensitivity analysis at optimum
+grad_opt = gradf(x_sqp);
+
+disp('--- Sensitivity Analysis (gradient at optimum) ---')
+vars = {'t','Aw','Rbase','k','g'};
+
+for i = 1:5
+    fprintf('dC/d%s = %.4e\n', vars{i}, grad_opt(i));
+end
+
+disp('--- Finite-difference sensitivity at optimum ---')
+
+x_ref = x_sqp;
+f_ref = f(x_ref);
+
+vars = {'t','Aw','Rbase','k','g'};
+rel_step = 1e-4;
+
+for i = 1:5
+    x_pert = x_ref;
+    h = rel_step * max(abs(x_ref(i)), 1);
+    x_pert(i) = x_pert(i) + h;
+
+    sens_fd = (f(x_pert) - f_ref) / h;
+
+    fprintf('FD sensitivity dC/d%s ≈ %.4e\n', vars{i}, sens_fd);
+end
+
+disp('--- Normalized sensitivity at optimum ---')
+
+grad_opt = gradf(x_sqp);
+f_opt = f(x_sqp);
+vars = {'t','Aw','Rbase','k','g'};
+
+for i = 1:5
+    S = (x_sqp(i) / f_opt) * grad_opt(i);
+    fprintf('Normalized sensitivity for %s = %.4e\n', vars{i}, S);
+end
+
+% Bar plot of normalized sensitivities
+figure;
+
+vars = {'t','Aw','Rbase','k','g'};
+norm_sens = zeros(5,1);
+
+for i = 1:5
+    norm_sens(i) = (x_sqp(i) / f(x_sqp)) * grad_opt(i);
+end
+
+bar(norm_sens)
+
+set(gca, 'XTickLabel', vars)
+xlabel('Design Variables')
+ylabel('Normalized Sensitivity')
+title('Sensitivity Analysis (Normalized)')
+grid on

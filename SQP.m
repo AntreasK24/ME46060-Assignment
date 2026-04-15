@@ -7,7 +7,8 @@ function [x_best,cost_best] = SQP(f,gradf,x0,confun,jaccon,debug,rho)
 
     
 
-    options_qp = optimoptions('quadprog','Display','off');
+    % options_qp = optimoptions('quadprog','Display','off');
+    options_qp = optimset('Display','off');
 
 
     cost = f(x);

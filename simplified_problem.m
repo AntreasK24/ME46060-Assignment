@@ -2,12 +2,12 @@ clc;clear;
 
 %Constants
 
-Rbase = 0.4;
-k = 0.035;
+Rbase = 0.6;
+k = 0.03;
 Atotal = 200;
 Amax = 40;
 dT = 18;
-g_sol = 0.6;
+g_sol = 0.4;
 Isol = 300;
 Uwindow = 1.2;
 H = 2500;
@@ -37,7 +37,7 @@ gradf = @(x) [
 ];
 
 g = {
-    @(x) x(1) - 0.30;   % t <= 0.30
+    @(x) x(1) - 0.15;   % t <= 0.15
     @(x) 0.02 - x(1);   % t >= 0.02
     @(x) x(2) - 40;     % Aw <= 40
     @(x) 5 - x(2);      % Aw >= 5
@@ -78,7 +78,7 @@ disp('--- SA Result ---')
 disp(x_sa)
 
 x0 = [0.1; 20];
-[x_sqp, cost_sqp] = SQP(f, gradf, x0, confun, jaccon,false,1e8);
+[x_sqp, cost_sqp] = SQP(f, gradf, x_sa, confun, jaccon,false,1e8);
 
 
 disp('--- SQP Result ---')
@@ -86,8 +86,8 @@ disp(x_sqp)
 
 
 % Expanded grid
-t = linspace(0, 0.35, 300);
-Aw = linspace(0, 50, 300);
+t = linspace(0, 0.15, 300);
+Aw = linspace(5, 40, 300);
 [T, AW] = meshgrid(t, Aw);
 
 % Cost function
@@ -152,3 +152,4 @@ legend([h1 h_sa h_sqp], ...
 
 % title('Zoom near optimum','FontSize',fontSize)
 % grid on
+
