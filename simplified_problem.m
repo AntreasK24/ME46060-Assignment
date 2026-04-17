@@ -103,17 +103,17 @@ Z = ce*H*( ...
 
 figure;
 
-fontSize = 25;
+fontSize = 20;
 
 
 contour(T, AW, Z, 50);
 hold on
 
 % Constraint boundaries
-h1 = plot([0.02 0.30],[5 5],'k','LineWidth',2);
-h2 = plot([0.02 0.30],[40 40],'k','LineWidth',2);
+h1 = plot([0.02 0.15],[5 5],'k','LineWidth',2);
+h2 = plot([0.02 0.15],[40 40],'k','LineWidth',2);
 h3 = plot([0.02 0.02],[5 40],'k','LineWidth',2);
-h4 = plot([0.30 0.30],[5 40],'k','LineWidth',2);
+h4 = plot([0.15 0.15],[5 40],'k','LineWidth',2);
 
 % Plot solutions
 h_sa  = plot(x_sa(1), x_sa(2), 'bo','MarkerFaceColor','b','MarkerSize',8);
